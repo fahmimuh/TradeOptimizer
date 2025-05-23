@@ -38,7 +38,7 @@ class CalculateOptimalTradeStrategyUseCase(
         }
         var ratesMap: Map<String, ExchangeRate>? = null
 
-        getExchangeRatesUseCase(investmentInput.currency, countryCurrencies).collect { resource ->
+        exchangeRatesFlow.collect { resource ->
             when (resource) {
                 is Resource.Loading -> emit(Resource.Loading())
                 is Resource.Success -> {

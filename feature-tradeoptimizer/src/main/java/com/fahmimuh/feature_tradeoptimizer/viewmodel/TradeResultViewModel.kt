@@ -27,10 +27,16 @@ class TradeResultViewModel @Inject constructor(
     private val _tradeResultState = MutableStateFlow<Resource<OptimizedTradeResult>>(Resource.Loading())
     val tradeResultState: StateFlow<Resource<OptimizedTradeResult>> = _tradeResultState.asStateFlow()
 
+    private val _calculationDate = MutableStateFlow<String?>(null)
+    val calculationDate: StateFlow<String?> = _calculationDate.asStateFlow()
+
     init {
         val investmentJson = savedStateHandle.get<String>("investmentJson")
         val countriesJson = savedStateHandle.get<String>("countriesJson")
         val date = savedStateHandle.get<String>("date")
+        val dateFromNav = savedStateHandle.get<String>("date")
+
+        _calculationDate.value = dateFromNav
 
         if (investmentJson != null && countriesJson != null) {
             try {

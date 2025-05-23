@@ -14,9 +14,3 @@ data class UiCountryData(
     var currency: String = "",
     var produceItems: MutableList<UiProduceItem> = mutableListOf(UiProduceItem())
 )
-
-data class TradeInputState(
-    val investmentAmount: String = "",
-    val homeCurrency: String = "",
-    val countries: MutableList<UiCountryData> = mutableListOf(UiCountryData())
-)

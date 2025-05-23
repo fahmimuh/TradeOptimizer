@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,6 +22,9 @@ import com.fahmimuh.core_common.utils.Resource
 import com.fahmimuh.core_domain.model.TradeAction
 import com.fahmimuh.core_domain.model.OptimizedTradeResult
 import com.fahmimuh.feature_tradeoptimizer.viewmodel.TradeResultViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,6 +33,7 @@ fun TradeResultScreen(
     viewModel: TradeResultViewModel = hiltViewModel()
 ) {
     val resultState by viewModel.tradeResultState.collectAsState()
+    val calculationDateString by viewModel.calculationDate.collectAsState()
 
     Scaffold(
         topBar = {
@@ -63,12 +68,21 @@ fun TradeResultScreen(
                     val tradeResult = resource.data
                     if (tradeResult != null) {
                         if (tradeResult.plan.isEmpty()) {
-                            Text(
-                                "No profitable trades found with the given input and constraints.",
-                                modifier = Modifier.align(Alignment.Center)
-                            )
+                            Column(
+                                modifier = Modifier.align(Alignment.Center),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                UsedParametersInfo(
+                                    dateString = calculationDateString,
+                                    homeCurrency = tradeResult.homeCurrencyCode
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Text("No profitable trades found with the given input and constraints.")
+                            }
                         } else {
-                            OptimizedResultContent(tradeResult)
+                            OptimizedResultContent(
+                                tradeResult,
+                                dateString = calculationDateString)
                         }
                     } else {
                         Text(
@@ -83,8 +97,36 @@ fun TradeResultScreen(
 }
 
 @Composable
-fun OptimizedResultContent(result: OptimizedTradeResult) {
+fun UsedParametersInfo(dateString: String?, homeCurrency: String) {
+    val displayDate = remember(dateString) {
+        if (dateString.isNullOrBlank()) {
+            "Latest Rates"
+        } else {
+            try {
+                LocalDate.parse(dateString).format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
+            } catch (e: Exception) {
+                dateString // Show raw string if parsing fails
+            }
+        }
+    }
+    Column(horizontalAlignment = Alignment.Start, modifier = Modifier.fillMaxWidth()) {
+        Text(
+            "Calculation Parameters:",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold
+        )
+        InfoRow("Rates Used:", displayDate)
+        InfoRow("Home Currency:", homeCurrency)
+        Spacer(modifier = Modifier.height(8.dp)) // Add some space before the plan title
+    }
+}
+
+@Composable
+fun OptimizedResultContent(result: OptimizedTradeResult, dateString: String?) {
     LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        item {
+            UsedParametersInfo(dateString = dateString, homeCurrency = result.homeCurrencyCode)
+        }
         item {
             Text("Optimal Trade Plan:", style = MaterialTheme.typography.headlineSmall)
         }
@@ -132,12 +174,18 @@ fun TradeActionCard(action: TradeAction, homeCurrencyCode: String) {
                 style = MaterialTheme.typography.titleMedium
             )
             InfoRow("Units Bought:", "${action.unitsBought}")
-            InfoRow("Cost (${action.localCurrencyCode}):", String.format("%.2f", action.costInLocalCurrency))
-            InfoRow("Cost ($homeCurrencyCode):", String.format("%.2f", action.costInHomeCurrency))
             InfoRow(
-                "Profit ($homeCurrencyCode):",
-                String.format("%.2f", action.profitInHomeCurrency),
-                valueColor = if (action.profitInHomeCurrency >= 0) Color.Green.copy(alpha = 0.7f) else MaterialTheme.colorScheme.error
+                label = "Cost (${action.localCurrencyCode}):",
+                value = String.format("%.2f", action.costInLocalCurrency)
+            )
+            InfoRow(
+                label = "Cost ($homeCurrencyCode):",
+                value = String.format("%.2f", action.costInHomeCurrency)
+            )
+            InfoRow(
+                label = "Profit ($homeCurrencyCode):",
+                value = String.format("%.2f", action.profitInHomeCurrency),
+                valueColor = if (action.profitInHomeCurrency >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error // Using theme colors
             )
         }
     }

@@ -3,11 +3,9 @@ package com.fahmimuh.core_data.di
 import com.fahmimuh.core_data.network.service.FrankfurterApiService
 import com.fahmimuh.core_data.repository.DefaultTradeRepository
 import com.fahmimuh.core_domain.repository.TradeRepository
-import com.fahmimuh.core_domain.usecase.GetAvailableCurrenciesUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.scopes.ViewModelScoped
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
